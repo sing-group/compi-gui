@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pipeline xmlns="http://www.sing-group.org/compi/pipeline-1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <version>1.0</version>
+    <params>
+        <param name="names" shortName="n">Your name</param>
+        <param name="delay" shortName="d" defaultValue="5">Delay in seconds</param>
+    </params>
+    <tasks>
+        <foreach id="greetings" params="names delay" of="list" in="${names}" as="name">
+            echo "Hi ${name} $(date)" 
+            sleep ${delay}
+            echo "Goodbye ${name} $(date)"
+        </foreach>
+    </tasks>
+</pipeline>

@@ -1,0 +1,8 @@
+version: "3.3"
+services:
+  jtd-docker-dev:
+    image: jtd-docker-dev
+    build:
+      context: ./
+      dockerfile: Dockerfile
+

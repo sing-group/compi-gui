@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+  http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <groupId>org.sing_group</groupId>
+  <artifactId>compi-gui</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+  
+  <name>Compi GUI</name>
+  <inceptionYear>2024</inceptionYear>
+
+  <licenses>
+    <license>
+      <name>GNU LESSER GENERAL PUBLIC LICENSE, Version 3</name>
+      <url>http://www.gnu.org/licenses/lgpl.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <properties>
+    <maven.compiler.source>10</maven.compiler.source>
+    <maven.compiler.target>10</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <!-- License configuration -->
+    <license.licenseName>gpl_v3</license.licenseName>
+    <license.copyrightOwners>
+      Florindo González Doval and Hugo López-Fernández
+    </license.copyrightOwners>
+    <license.organizationName>SING Research Group (Universidade de Vigo)</license.organizationName>
+    <license.addJavaLicenseAfterPackage>false</license.addJavaLicenseAfterPackage>
+
+    <!-- Main class -->
+    <exec.mainClass>org.sing_group.compi.CompiGui</exec.mainClass>
+
+    <!-- Distribution / installer resource directories -->
+    <distResourcesDirectory>src/main/dist-resources</distResourcesDirectory>
+    <installerResourcesDirectory>src/main/installer</installerResourcesDirectory>
+
+    <!-- Skip flags (overridden by profiles) -->
+    <should.skip.dist>true</should.skip.dist>
+    <should.skip.installer>true</should.skip.installer>
+
+    <!-- Dependencies version -->
+    <junit.version>4.12</junit.version>
+    <gc4s.version>1.6.0</gc4s.version>
+
+    <!-- Plugins version -->
+    <exec-maven-plugin.version>3.1.0</exec-maven-plugin.version>
+    <license-maven-plugin.version>1.8</license-maven-plugin.version>
+    <maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
+    <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
+    <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+    <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
+  </properties>
+    
+  <profiles>
+    <profile>
+      <id>createDist</id>
+      <properties>
+        <should.skip.dist>false</should.skip.dist>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <id>fix-permissions</id>
+                <phase>package</phase>
+                <configuration>
+                  <target>
+                    <chmod perm="ugo+x">
+                      <fileset dir="${basedir}/target/dist">
+                        <include name="compi-gui"/>
+                      </fileset>
+                    </chmod>
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>createInstaller</id>
+      <properties>
+        <should.skip.dist>false</should.skip.dist>
+        <should.skip.installer>false</should.skip.installer>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <id>fix-permissions</id>
+                <phase>package</phase>
+                <configuration>
+                  <target>
+                    <chmod perm="ugo+x">
+                      <fileset dir="${basedir}/target/dist">
+                        <include name="compi-gui"/>
+                      </fileset>
+                      <fileset dir="${basedir}/target/installer/payload/compi-gui">
+                        <include name="compi-gui"/>
+                      </fileset>
+                      <fileset dir="${basedir}/target/installer/payload">
+                        <include name="installer"/>
+                      </fileset>
+                      <fileset dir="${basedir}/target/installer">
+                        <include name="build"/>
+                      </fileset>
+                    </chmod>
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>build-installer</id>
+                <phase>package</phase>
+                <configuration>
+                  <target>
+                    <exec executable="${basedir}/target/installer/build"
+                          dir="${project.build.directory}/installer"
+                          failonerror="true"/>
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>make-installer-executable</id>
+                <phase>package</phase>
+                <configuration>
+                  <target>
+                    <chmod perm="ugo+x">
+                      <fileset dir="${basedir}/target/installer">
+                        <include name="*.bsx"/>
+                      </fileset>
+                    </chmod>
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>make-portable-installer</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <tar destfile="${project.build.directory}/installer/compi-gui-${project.version}.tar">
+                      <tarfileset dir="${project.build.directory}/installer/payload/compi-gui"
+                                  prefix="compi-gui-${project.version}"
+                                  filemode="775">
+                        <include name="compi-gui"/>
+                        <include name="compi-gui-files/**"/>
+                      </tarfileset>
+                    </tar>
+                    <gzip destfile="${project.build.directory}/installer/compi-gui-${project.version}.tar.gz"
+                          src="${project.build.directory}/installer/compi-gui-${project.version}.tar"/>
+                    <delete file="${project.build.directory}/installer/compi-gui-${project.version}.tar"/>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>1.12</version>
+            <executions>
+              <execution>
+                <id>attach-artifacts</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>attach-artifact</goal>
+                </goals>
+                <configuration>
+                  <artifacts>
+                    <artifact>
+                      <file>${project.build.directory}/installer/compi-gui-${project.version}.tar.gz</file>
+                      <type>tar.gz</type>
+                    </artifact>
+                  </artifacts>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <distributionManagement>
+    <repository>
+      <id>sing-maven-releases</id>
+      <name>SING Maven Releases</name>
+      <url>https://maven.sing-group.org/repository/maven-releases/</url>
+    </repository>
+
+    <snapshotRepository>
+      <id>sing-maven-releases</id>
+      <name>SING Maven Snapshots</name>
+      <url>https://maven.sing-group.org/repository/maven-snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>sing-repository</id>
+      <name>SING repository</name>
+      <url>https://maven.sing-group.org/repository/maven-releases/</url>
+    </repository>
+  </repositories>
+  
+  <dependencies>
+    <!-- Dependency for testing -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.sing_group</groupId>
+      <artifactId>gc4s</artifactId>
+      <version>${gc4s.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.sing_group</groupId>
+		  <artifactId>compi-core</artifactId>
+		  <version>1.5.2</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.json/json -->
+  <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20250107</version>
+  </dependency>
+  </dependencies>
+  
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>${maven-source-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${license-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>first</id>
+            <goals>
+              <goal>update-file-header</goal>
+            </goals>
+            <phase>process-sources</phase>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Plugin for Testing -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
+        <configuration>
+          <!-- Needed  to handle good String comparations -->
+          <argLine>-Dfile.encoding=UTF-8</argLine>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>${exec-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>java</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <mainClass>org.sing_group.compi.CompiGui</mainClass>
+        </configuration>
+      </plugin>
+
+      <!-- Plugin for packaging -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>${maven-assembly-plugin.version}</version>
+
+        <executions>
+          <execution>
+            <id>cli-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+              <archive>
+                <manifest>
+                  <addClasspath>true</addClasspath>
+                  <mainClass>org.sing_group.compi.CompiGui</mainClass>
+                </manifest>
+              </archive>
+            </configuration>
+          </execution>
+          <execution>
+            <id>make-assembly-for-dist</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <skipAssembly>${should.skip.dist}</skipAssembly>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+              <archive>
+                <manifest>
+                  <addClasspath>true</addClasspath>
+                  <mainClass>${exec.mainClass}</mainClass>
+                </manifest>
+              </archive>
+              <outputDirectory>${project.build.directory}/dist</outputDirectory>
+              <attach>false</attach>
+            </configuration>
+          </execution>
+          <execution>
+            <id>make-assembly-for-installer</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <skipAssembly>${should.skip.installer}</skipAssembly>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+              <archive>
+                <manifest>
+                  <addClasspath>true</addClasspath>
+                  <mainClass>${exec.mainClass}</mainClass>
+                </manifest>
+              </archive>
+              <outputDirectory>${project.build.directory}/installer/payload/compi-gui/compi-gui-files</outputDirectory>
+              <attach>false</attach>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Copy and filter dist-resources / installer resources -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-dist-resources</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <skip>${should.skip.dist}</skip>
+              <outputDirectory>${project.build.directory}/dist</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${distResourcesDirectory}</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-installer-resources</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <skip>${should.skip.installer}</skip>
+              <outputDirectory>${project.build.directory}/installer</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${installerResourcesDirectory}</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Unpack bundled JRE for the installer payload -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack-jre</id>
+            <phase>package</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <skip>${should.skip.installer}</skip>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.oracle.java</groupId>
+                  <artifactId>jre-mod.java.base-mod.java.logging-mod.java.xml-mod.java.naming-mod.java.desktop-mod.java.scripting-mod.java.scripting.nashorn</artifactId>
+                  <version>10.0.1</version>
+                  <type>tgz</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${project.build.directory}/installer/payload/compi-gui/compi-gui-files/jre</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

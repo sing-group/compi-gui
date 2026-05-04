@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pipeline xmlns="http://www.sing-group.org/compi/pipeline-1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <version>1.0</version>
+    <params>
+        <param name="name" shortName="n">Your name</param>
+        <flag name="galego" shortName="gl" global="true">Print greetings in Galician.</flag>
+        <param name="output" shortName="o">Output file</param>
+    </params>
+    <tasks>
+        <task id="greetings" params="name output">
+            echo "Hi ${name}" > ${output}
+            if [ ! -v ${galego} ]; then
+                echo "Ola ${name}" >> ${output}
+            fi
+        </task>
+        <task id="bye" after="greetings" params="name output" 
+          interpreter="python3 -c &quot;${task_code}&quot;">
+import os
+name = os.environ['name']
+output = os.environ['output']
+f = open(output, "a")
+f.write("bye " + name + "\n")
+f.close()
+        </task>
+    </tasks>
+</pipeline>
